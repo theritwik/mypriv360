@@ -122,7 +122,7 @@ export async function logAccess(params: LogAccessParams): Promise<void> {
         apiClientId: apiClientId || null,
         endpoint,
         action,
-        categoryKeys,
+        categoryKeys: JSON.stringify(categoryKeys), // Store array as JSON string
         purpose: purpose || null,
         tokenId: tokenId || null,
         ip: clientIp,
@@ -165,7 +165,7 @@ export async function logAuthEvent(params: {
         apiClientId: null,
         endpoint: '/auth',
         action: `${action}${success ? '_success' : '_failure'}`,
-        categoryKeys: [],
+        categoryKeys: JSON.stringify([]), // Empty array as JSON string
         purpose: errorCode || null,
         tokenId: null,
         ip: clientIp,
@@ -206,7 +206,7 @@ export async function logConsentEvent(params: {
         apiClientId: null,
         endpoint: '/api/consent',
         action,
-        categoryKeys,
+        categoryKeys: JSON.stringify(categoryKeys), // Store array as JSON string
         purpose,
         tokenId,
         ip: clientIp,
@@ -247,7 +247,7 @@ export async function logPolicyEvent(params: {
         apiClientId: null,
         endpoint: '/api/consent/policies',
         action,
-        categoryKeys: [categoryKey],
+        categoryKeys: JSON.stringify([categoryKey]), // Store single category as JSON array
         purpose,
         tokenId: null,
         ip: clientIp,

@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId: user.id,
         categoryKey,
-        payload,
+        payload: JSON.stringify(payload), // Store payload as JSON string
       },
     })
 

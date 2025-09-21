@@ -7,11 +7,11 @@ import { jsonOk, jsonError, zodError, handleApiError, HttpStatus } from '@/lib/h
 import { z } from 'zod'
 
 // Request validation schema
-const issueTokenSchema = z.object({
-  purpose: z.string().min(1, 'Purpose is required'),
-  categories: z.array(z.string()).min(1, 'At least one category is required'),
-  scopes: z.array(z.string()).min(1, 'At least one scope is required'),
-  ttlMinutes: z.number().int().min(1).max(10080), // Max 1 week (7 * 24 * 60)
+const Body = z.object({
+  purpose: z.string(),
+  categories: z.array(z.string()).nonempty(),
+  scopes: z.array(z.string()).default([]),
+  ttlMinutes: z.number().int().positive().max(24 * 60),
 })
 
 /**
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     // Parse and validate request body
     const body = await req.json()
-    const { purpose, categories, scopes, ttlMinutes } = issueTokenSchema.parse(body)
+    const { purpose, categories, scopes, ttlMinutes } = Body.parse(body)
 
     // Check if user has granted consent for all requested categories/scopes/purpose
     await ensureConsentAllowed({
@@ -69,8 +69,8 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         jwt: token,
         purpose,
-        categories,
-        scopes,
+        categories: JSON.stringify(categories), // Store array as JSON string
+        scopes: JSON.stringify(scopes),         // Store array as JSON string
         expiresAt,
         revoked: false,
       },

@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       action: 'token-revoked',
       tokenId: tokenId,
       purpose: existingToken.purpose,
-      categoryKeys: existingToken.categories,
+      categoryKeys: JSON.parse(existingToken.categories), // Parse JSON string back to array
       req,
     })
 

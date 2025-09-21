@@ -53,8 +53,8 @@ model ConsentPolicy {
   userId     String
   categoryId String
   purpose    String
-  scopes     String    // JSON string instead of String[]
-  status     String    // String instead of ConsentStatus enum
+  scopes     String // JSON string for array of scopes
+  status     String // String instead of ConsentStatus enum
   expiresAt  DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -70,15 +70,15 @@ model ConsentPolicy {
 
 // JWT tokens for consent verification
 model ConsentToken {
-  id         String    @id @default(cuid())
+  id         String   @id @default(cuid())
   userId     String
   jwt        String
   purpose    String
-  categories String    // JSON string instead of String[]
-  scopes     String    // JSON string instead of String[]
+  categories String // JSON string for array of categories
+  scopes     String // JSON string for array of scopes
   expiresAt  DateTime
-  revoked    Boolean   @default(false)
-  createdAt  DateTime  @default(now())
+  revoked    Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   // Relations
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -100,7 +100,7 @@ model ApiClient {
   createdAt   DateTime  @default(now())
 
   // Relations
-  accessLogs AccessLog[]
+  accessLogs       AccessLog[]
   rateLimitBuckets RateLimitBucket[]
 
   @@index([apiKey])
@@ -117,13 +117,13 @@ model AccessLog {
   action       String
   resource     String?
   outcome      String?
-  categoryKeys String   // JSON string instead of String[]
+  categoryKeys String // JSON string for array of category keys
   purpose      String?
   tokenId      String?
   ip           String?
   ipAddress    String?
   userAgent    String?
-  metadata     String?  // String instead of Json
+  metadata     String? // String instead of Json
   createdAt    DateTime @default(now())
 
   // Relations
@@ -141,7 +141,7 @@ model SampleData {
   id          String   @id @default(cuid())
   userId      String
   categoryKey String
-  payload     String   // String instead of Json
+  payload     String // String instead of Json
   createdAt   DateTime @default(now())
 
   // Relations
@@ -154,16 +154,16 @@ model SampleData {
 
 // Rate limiting for API endpoints (fixed window approach)
 model RateLimitBucket {
-  id           String    @id @default(cuid())
-  apiKey       String   
-  endpoint     String   
-  windowStart  DateTime 
-  requestCount Int       @default(0)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id           String   @id @default(cuid())
+  apiKey       String
+  endpoint     String
+  windowStart  DateTime
+  requestCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  apiClient    ApiClient @relation(fields: [apiKey], references: [apiKey], onDelete: Cascade)
+  apiClient ApiClient @relation(fields: [apiKey], references: [apiKey], onDelete: Cascade)
 
   @@unique([apiKey, endpoint, windowStart])
   @@index([apiKey, endpoint])

@@ -390,7 +390,15 @@ export async function getActiveTokensJsonAction(): Promise<ActionResult<any[]>> 
       }
     })
 
-    return { success: true, data: tokens }
+    // Parse JSON strings back to arrays for client consumption
+    const tokensWithArrays = tokens.map(token => ({
+      ...token,
+      categories: JSON.parse(token.categories),
+      scopes: JSON.parse(token.scopes),
+      categoryKeys: JSON.parse(token.categories) // Add categoryKeys alias for compatibility
+    }))
+
+    return { success: true, data: tokensWithArrays }
   } catch (error) {
     console.error('Failed to get active tokens:', error)
     return {
@@ -479,12 +487,12 @@ export async function loadDemoHealthData(): Promise<ActionResult<void>> {
         id: `${user.id}-health` // Use a composite ID since there's no composite unique constraint
       },
       update: {
-        payload: healthData
+        payload: JSON.stringify(healthData)
       },
       create: {
         userId: user.id,
         categoryKey: 'health',
-        payload: healthData
+        payload: JSON.stringify(healthData)
       }
     })
 
@@ -659,7 +667,7 @@ export async function queryDPStepsMean(): Promise<ActionResult<{ dpMean: number;
           userId: user.id,
           endpoint: '/dashboard/dp-query',
           action: 'query',
-          categoryKeys: ['health'],
+          categoryKeys: JSON.stringify(['health']), // Store array as JSON string
           purpose: 'telemedicine',
           ip: 'internal',
           userAgent: 'dashboard'

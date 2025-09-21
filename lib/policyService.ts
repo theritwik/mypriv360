@@ -7,15 +7,34 @@ export type PolicyWithCategory = ConsentPolicy & {
   category: DataCategory
 }
 
+// Type for policy with parsed scopes for client consumption  
+export type PolicyWithCategoryParsed = Omit<PolicyWithCategory, 'scopes' | 'status'> & {
+  scopes: string[]
+  status: 'GRANTED' | 'RESTRICTED' | 'REVOKED'
+}
+
+/**
+ * Transform policy to parse JSON scopes for client consumption
+ */
+export function transformPolicyForClient(policy: PolicyWithCategory): PolicyWithCategoryParsed {
+  return {
+    ...policy,
+    scopes: JSON.parse(policy.scopes),
+    status: policy.status as 'GRANTED' | 'RESTRICTED' | 'REVOKED' // Cast status to proper type
+  }
+}
+
 /**
  * List all consent policies for a user with category information
  */
-export async function listUserPolicies(userId: string): Promise<PolicyWithCategory[]> {
-  return await prisma.consentPolicy.findMany({
+export async function listUserPolicies(userId: string): Promise<PolicyWithCategoryParsed[]> {
+  const policies = await prisma.consentPolicy.findMany({
     where: { userId },
     include: { category: true },
     orderBy: { createdAt: 'desc' },
   })
+  
+  return policies.map(transformPolicyForClient)
 }
 
 /**
@@ -24,7 +43,7 @@ export async function listUserPolicies(userId: string): Promise<PolicyWithCatego
 export async function upsertUserPolicy(
   userId: string,
   data: ConsentPolicyCreateInput & { id?: string }
-): Promise<PolicyWithCategory> {
+): Promise<PolicyWithCategoryParsed> {
   const { id, categoryId, purpose, scopes, status, expiresAt } = data
 
   // Parse expiresAt if provided
@@ -39,13 +58,13 @@ export async function upsertUserPolicy(
       },
       data: {
         purpose,
-        scopes,
+        scopes: JSON.stringify(scopes), // Store array as JSON string
         status,
         expiresAt: expirationDate,
       },
       include: { category: true },
     })
-    return updatedPolicy
+    return transformPolicyForClient(updatedPolicy as PolicyWithCategory)
   } else {
     // Check if policy already exists for this user/category/purpose combination
     const existingPolicy = await prisma.consentPolicy.findFirst({
@@ -62,13 +81,13 @@ export async function upsertUserPolicy(
       const updatedPolicy = await prisma.consentPolicy.update({
         where: { id: existingPolicy.id },
         data: {
-          scopes,
+          scopes: JSON.stringify(scopes), // Store array as JSON string
           status,
           expiresAt: expirationDate,
         },
         include: { category: true },
       })
-      return updatedPolicy
+      return transformPolicyForClient(updatedPolicy as PolicyWithCategory)
     } else {
       // Create new policy
       const newPolicy = await prisma.consentPolicy.create({
@@ -76,13 +95,13 @@ export async function upsertUserPolicy(
           userId,
           categoryId,
           purpose,
-          scopes,
+          scopes: JSON.stringify(scopes), // Store array as JSON string
           status,
           expiresAt: expirationDate,
         },
         include: { category: true },
       })
-      return newPolicy
+      return transformPolicyForClient(newPolicy as PolicyWithCategory)
     }
   }
 }
@@ -105,14 +124,16 @@ export async function deleteUserPolicy(userId: string, policyId: string): Promis
 export async function getUserPolicy(
   userId: string,
   policyId: string
-): Promise<PolicyWithCategory | null> {
-  return await prisma.consentPolicy.findFirst({
+): Promise<PolicyWithCategoryParsed | null> {
+  const policy = await prisma.consentPolicy.findFirst({
     where: {
       id: policyId,
       userId,
     },
     include: { category: true },
   })
+  
+  return policy ? transformPolicyForClient(policy) : null
 }
 
 /**

@@ -56,8 +56,8 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       id: params.id,
       categoryId: existingPolicy.categoryId, // Keep existing category
       purpose: validatedData.purpose ?? existingPolicy.purpose,
-      scopes: validatedData.scopes ?? existingPolicy.scopes,
-      status: validatedData.status ?? existingPolicy.status,
+      scopes: validatedData.scopes ?? existingPolicy.scopes, // Already parsed by getUserPolicy
+      status: validatedData.status ?? (existingPolicy.status as 'GRANTED' | 'RESTRICTED' | 'REVOKED'),
       expiresAt: validatedData.expiresAt !== undefined ? validatedData.expiresAt : existingPolicy.expiresAt?.toISOString() ?? null,
     })
 

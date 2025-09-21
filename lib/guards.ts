@@ -219,7 +219,7 @@ export async function requireConsentToken(authHeader: string | null) {
 
     // Double-check expiration against database
     if (storedToken.expiresAt < new Date()) {
-      const categories = storedToken.categories.join(", ");
+      const categories = JSON.parse(storedToken.categories).join(", ");
       throw new ForbiddenError(
         "Token has expired",
         "TOKEN_EXPIRED",
@@ -380,8 +380,9 @@ export async function ensureConsentAllowed(
       }
 
       // Check scopes - all requested scopes must be included in policy scopes
+      const policyScopes = JSON.parse(policy.scopes);
       const missingScopes = scopes.filter(
-        (scope) => !policy.scopes.includes(scope),
+        (scope) => !policyScopes.includes(scope),
       );
       if (missingScopes.length > 0) {
         throw new ForbiddenError(

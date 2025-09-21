@@ -155,10 +155,16 @@ export async function getAuditLogsAction(
 
     const hasMore = totalCount > page * limit
 
+    // Transform logs to parse JSON strings back to arrays
+    const transformedLogs = logs.map(log => ({
+      ...log,
+      categoryKeys: JSON.parse(log.categoryKeys)
+    }))
+
     return {
       success: true,
       data: {
-        logs,
+        logs: transformedLogs,
         totalCount,
         hasMore
       }
