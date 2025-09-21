@@ -1,0 +1,172 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enum definitions - converted to string constants for SQLite
+// enum ConsentStatus {
+//   GRANTED
+//   RESTRICTED
+//   REVOKED
+// }
+
+// User model
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  // Relations
+  consentPolicies ConsentPolicy[]
+  consentTokens   ConsentToken[]
+  accessLogs      AccessLog[]
+  sampleData      SampleData[]
+
+  @@index([createdAt])
+  @@map("users")
+}
+
+// Data categories that define types of data being processed
+model DataCategory {
+  id   String @id @default(cuid())
+  key  String
+  name String
+
+  // Relations
+  consentPolicies ConsentPolicy[]
+
+  @@unique([key])
+  @@map("data_categories")
+}
+
+// User consent policies for specific data categories
+model ConsentPolicy {
+  id         String    @id @default(cuid())
+  userId     String
+  categoryId String
+  purpose    String
+  scopes     String    // JSON string instead of String[]
+  status     String    // String instead of ConsentStatus enum
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category DataCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("consent_policies")
+}
+
+// JWT tokens for consent verification
+model ConsentToken {
+  id         String    @id @default(cuid())
+  userId     String
+  jwt        String
+  purpose    String
+  categories String    // JSON string instead of String[]
+  scopes     String    // JSON string instead of String[]
+  expiresAt  DateTime
+  revoked    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  // Relations
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessLogs AccessLog[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("consent_tokens")
+}
+
+// API clients that can access user data
+model ApiClient {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  status      String    @default("ACTIVE")
+  apiKey      String    @unique
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  accessLogs AccessLog[]
+  rateLimitBuckets RateLimitBucket[]
+
+  @@index([apiKey])
+  @@index([createdAt])
+  @@map("api_clients")
+}
+
+// Log of all data access attempts
+model AccessLog {
+  id           String   @id @default(cuid())
+  userId       String
+  apiClientId  String?
+  endpoint     String
+  action       String
+  resource     String?
+  outcome      String?
+  categoryKeys String   // JSON string instead of String[]
+  purpose      String?
+  tokenId      String?
+  ip           String?
+  ipAddress    String?
+  userAgent    String?
+  metadata     String?  // String instead of Json
+  createdAt    DateTime @default(now())
+
+  // Relations
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiClient ApiClient?    @relation(fields: [apiClientId], references: [id], onDelete: SetNull)
+  token     ConsentToken? @relation(fields: [tokenId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("access_logs")
+}
+
+// Sample user data for different categories
+model SampleData {
+  id          String   @id @default(cuid())
+  userId      String
+  categoryKey String
+  payload     String   // String instead of Json
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("sample_data")
+}
+
+// Rate limiting for API endpoints (fixed window approach)
+model RateLimitBucket {
+  id           String    @id @default(cuid())
+  apiKey       String   
+  endpoint     String   
+  windowStart  DateTime 
+  requestCount Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  apiClient    ApiClient @relation(fields: [apiKey], references: [apiKey], onDelete: Cascade)
+
+  @@unique([apiKey, endpoint, windowStart])
+  @@index([apiKey, endpoint])
+  @@index([windowStart])
+  @@map("rate_limit_buckets")
+}

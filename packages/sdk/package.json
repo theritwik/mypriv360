@@ -1,0 +1,60 @@
+{
+  "name": "@mypriv360/sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for MyPriv360 privacy-first data platform",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "dev": "tsup --watch",
+    "clean": "rimraf dist",
+    "test": "tsx test.ts",
+    "examples": "tsx examples.ts",
+    "prepublishOnly": "npm run clean && npm run build && npm run test"
+  },
+  "keywords": [
+    "privacy",
+    "differential-privacy",
+    "consent-management",
+    "data-protection",
+    "gdpr",
+    "typescript",
+    "sdk"
+  ],
+  "author": "MyPriv360",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "rimraf": "^5.0.0",
+    "tsup": "^7.2.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.5.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mypriv360/sdk.git"
+  },
+  "homepage": "https://github.com/mypriv360/sdk#readme",
+  "bugs": {
+    "url": "https://github.com/mypriv360/sdk/issues"
+  }
+}

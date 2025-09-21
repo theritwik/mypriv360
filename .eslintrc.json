@@ -1,0 +1,38 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    // General code quality rules
+    "prefer-const": "error",
+    "no-var": "error",
+    "no-console": [
+      "warn",
+      {
+        "allow": ["warn", "error", "info"]
+      }
+    ],
+    "no-debugger": "error",
+    "eqeqeq": ["error", "always"],
+    "curly": ["error", "all"],
+    "no-trailing-spaces": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    ".next/",
+    "node_modules/",
+    "dist/",
+    "build/",
+    "coverage/",
+    "*.config.js",
+    "*.config.ts",
+    ".eslintrc.json",
+    "lib/privacy/**/*",
+    "lib/http-test.ts"
+  ]
+}
